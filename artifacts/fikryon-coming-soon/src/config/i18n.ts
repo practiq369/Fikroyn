@@ -32,7 +32,7 @@ export const copy = {
     langSwitch: "تغيير اللغة",
     toLight: "التبديل إلى الوضع النهاري",
     toDark: "التبديل إلى الوضع الليلي",
-    launchDate: "٣ نوفمبر ٢٠٢٦ · الرياض",
+    timeRemaining: "الوقت المتبقي",
   },
   en: {
     title: "FIKRYON | Innovation & Technology",
@@ -65,6 +65,6 @@ export const copy = {
     langSwitch: "Change language",
     toLight: "Switch to light mode",
     toDark: "Switch to dark mode",
-    launchDate: "03 November 2026 · Riyadh",
+    timeRemaining: "Time remaining",
   },
 } as const;

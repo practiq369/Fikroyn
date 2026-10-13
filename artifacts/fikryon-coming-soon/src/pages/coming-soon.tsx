@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { copy, type Lang } from "@/config/i18n";
 import {
-  CONTACT_EMAIL, LAUNCH_DATE, LINKEDIN_URL, LOGO_SRC, TWITTER_URL, isPlaceholder,
+  CONTACT_EMAIL, COUNTDOWN_START_DATE, LAUNCH_DATE, LINKEDIN_URL, LOGO_DARK_SRC, LOGO_LIGHT_SRC, TWITTER_URL, isPlaceholder,
 } from "@/config/site";
 import { usePreferences } from "@/hooks/use-preferences";
 import { NetworkBackground } from "@/components/network-background";
@@ -10,10 +10,15 @@ import {
 } from "@/components/icons";
 
 const target = new Date(LAUNCH_DATE).getTime();
+const countdownStart = new Date(COUNTDOWN_START_DATE).getTime();
 function remaining() {
-  const d = Math.max(0, target - Date.now());
+  const now = Date.now();
+  const d = Math.max(0, target - now);
+  const duration = Math.max(1, target - countdownStart);
+  const percent = Math.round(Math.min(1, Math.max(0, (target - now) / duration)) * 100);
   return {
     done: d === 0,
+    percent,
     days: Math.floor(d / 86400000),
     hours: Math.floor(d / 3600000) % 24,
     minutes: Math.floor(d / 60000) % 60,
@@ -34,21 +39,28 @@ const fmt = (n: number, lang: Lang, pad = 2) =>
   new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-arab" : "en-US", {
     minimumIntegerDigits: pad, useGrouping: false,
   }).format(n);
+const fmtPercent = (n: number, lang: Lang) =>
+  new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-arab" : "en-US", {
+    style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1,
+  }).format(n / 100);
 
-/* ---------------- Brand lockup (replaceable fallback) ---------------- */
-function BrandLockup({ lang }: { lang: Lang }) {
-  // OFFICIAL LOGO REPLACEMENT POINT: set LOGO_SRC in src/config/site.ts.
-  if (!isPlaceholder(LOGO_SRC)) {
-    return <img src={LOGO_SRC} alt="FIKRYON | فيكريون" className="h-10 w-auto" data-testid="img-logo" />;
-  }
+/* ---------------- Official brand lockup ---------------- */
+function BrandLockup() {
   return (
-    <div className="fk-lockup" data-testid="brand-lockup" aria-label="FIKRYON | فيكريون — Innovation & Technology">
-      <span className="flex flex-col leading-none">
-        <span className="fk-lockup-name">
-          {lang === "ar" ? <>فيكريون <span className="fk-lockup-alt">FIKRYON</span></> : <>FIKRYON <span className="fk-lockup-alt">فيكريون</span></>}
-        </span>
-        <span className="fk-lockup-sub">{copy[lang].brandSub}</span>
-      </span>
+    <div className="fk-lockup" data-testid="brand-lockup">
+      <img
+        src={LOGO_LIGHT_SRC}
+        alt="FIKRYON | فيكريون — Innovation & Technology"
+        className="fk-logo fk-logo-light"
+        data-testid="img-logo-light"
+      />
+      <img
+        src={LOGO_DARK_SRC}
+        alt=""
+        aria-hidden="true"
+        className="fk-logo fk-logo-dark"
+        data-testid="img-logo-dark"
+      />
     </div>
   );
 }
@@ -112,6 +124,23 @@ function Countdown({ lang }: { lang: Lang }) {
             <span className="fk-unit-label">{t.units[u.k]}</span>
           </div>
         ))}
+      </div>
+      <div className="fk-progress" data-testid="countdown-progress">
+        <div className="fk-progress-label">
+          <span>{t.timeRemaining}</span>
+          <span className="fk-progress-value">{fmtPercent(c.percent, lang)}</span>
+        </div>
+        <div
+          className="fk-progress-track"
+          role="progressbar"
+          aria-label={t.timeRemaining}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={c.percent}
+          aria-valuetext={fmtPercent(c.percent, lang)}
+        >
+          <span className="fk-progress-fill" style={{ width: `${c.percent}%` }} />
+        </div>
       </div>
       <p className="fk-final" data-testid="text-final-touches">
         <span className="fk-final-dot" aria-hidden="true" />
@@ -238,8 +267,10 @@ export default function ComingSoon() {
       </div>
 
       <header className="fk-header fk-rise" style={{ ["--d" as string]: "0" }}>
-        <BrandLockup lang={lang} />
-        <Controls lang={lang} theme={theme} onLang={changeLang} onTheme={toggleTheme} />
+        <BrandLockup />
+        <div className="fk-header-controls">
+          <Controls lang={lang} theme={theme} onLang={changeLang} onTheme={toggleTheme} />
+        </div>
       </header>
 
       <main key={lang} className="fk-main">
@@ -264,7 +295,6 @@ export default function ComingSoon() {
 
         <div className="fk-stack">
           <Countdown lang={lang} />
-          <p className="fk-date fk-rise" style={{ ["--d" as string]: "5" }}>{t.launchDate}</p>
           <NotifyForm lang={lang} />
         </div>
       </main>
