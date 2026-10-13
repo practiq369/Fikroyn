@@ -9,17 +9,20 @@ import {
   ArrowIcon, CheckIcon, LinkedInIcon, MailIcon, MoonIcon, SunIcon, XIcon,
 } from "@/components/icons";
 
+const DAY_MS = 86400000;
 const target = new Date(LAUNCH_DATE).getTime();
 const countdownStart = new Date(COUNTDOWN_START_DATE).getTime();
+const totalCountdownDays = Math.max(1, Math.ceil((target - countdownStart) / DAY_MS));
 function remaining() {
   const now = Date.now();
   const d = Math.max(0, target - now);
-  const duration = Math.max(1, target - countdownStart);
-  const percent = Math.round(Math.min(1, Math.max(0, (target - now) / duration)) * 100);
+  const days = Math.floor(d / DAY_MS);
+  const daysForPercent = d === 0 ? 0 : Math.max(1, days);
+  const percent = Math.round(Math.min(1, daysForPercent / totalCountdownDays) * 100);
   return {
     done: d === 0,
     percent,
-    days: Math.floor(d / 86400000),
+    days,
     hours: Math.floor(d / 3600000) % 24,
     minutes: Math.floor(d / 60000) % 60,
     seconds: Math.floor(d / 1000) % 60,
@@ -41,7 +44,7 @@ const fmt = (n: number, lang: Lang, pad = 2) =>
   }).format(n);
 const fmtPercent = (n: number, lang: Lang) =>
   new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-arab" : "en-US", {
-    style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1,
+    style: "percent", maximumFractionDigits: 0,
   }).format(n / 100);
 
 /* ---------------- Official brand lockup ---------------- */
